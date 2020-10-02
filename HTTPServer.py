@@ -14,23 +14,10 @@ class Request:
 
 
 class Response:
-    def __init__(self):
-        pass
-
-
-class HTTPStatus(IntEnum):
-    def __new__(cls, value, phrase):
-        obj = int.__new__(cls)
-        obj._value_ = value
-        obj.phrase = phrase
-        return obj
-
-    OK = 200, 'OK'
-    BAD_REQUEST = 400, 'Bad Request'
-    FORBIDDEN = 403, 'Forbidden'
-    NOT_FOUND = 404, 'Not Found'
-    METHOD_NOT_ALLOWED = 405, 'Method Not Allowed'
-    UNSUPPORTED_MEDIA_TYPE = 415, 'Unsupported Media Type'
+    def __init__(self, status: HTTPStatus, headers: dict, body: str = None):
+        self.status = status
+        self.headers = headers
+        self.body = body
 
 
 class ServerConnectionError(Exception):
