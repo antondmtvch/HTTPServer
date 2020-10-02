@@ -112,9 +112,9 @@ class HTTPHandler:
         self.wfile = client_socket.makefile('wb')
 
     def process_request(self):
-        if not (request := self.request_line_parser()):
-            return
-        if not (headers := self.headers_parser()):
+        request = self.request_line_parser()
+        headers = self.headers_parser()
+        if not bool(request and headers):
             return
         request.headers.update(headers)
         return Response
