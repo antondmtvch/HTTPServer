@@ -84,11 +84,12 @@ class HTTPServer(TCPServer):
 
 
 class HTTPHandler:
-    allowed_methods = {'GET', 'HEAD'}
-    request_line_max_length = 1024 * 60
-    max_headers = 100
+    ALLOWED_METHODS = {'GET', 'HEAD'}
+    MAX_LINE = 1024 * 64
+    MAX_HEADERS = 100
+    ENCODING = 'iso-8859-1'
 
-    def __init__(self, client_socket):
+    def __init__(self, client_socket: socket.socket):
         self.sock = client_socket
         self.rfile = client_socket.makefile('rb')
         self.wfile = client_socket.makefile('wb')
