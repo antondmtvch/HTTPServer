@@ -93,10 +93,13 @@ class HTTPHandler:
         self.rfile = client_socket.makefile('rb')
         self.wfile = client_socket.makefile('wb')
 
-    def parse_request(self):
-        request = self.request_parser()
-        headers = self.headers_parser()
+    def process_request(self):
+        if not (request := self.request_line_parser()):
+            return
+        if not (headers := self.headers_parser()):
+            return
         request.headers.update(headers)
+        return Response
 
     def request_parser(self):
         line = self.rfile.readline(self.request_line_max_length + 1)
