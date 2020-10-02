@@ -101,17 +101,20 @@ class HTTPHandler:
         request.headers.update(headers)
         return Response
 
-    def request_parser(self):
-        line = self.rfile.readline(self.request_line_max_length + 1)
-        self.__check_line(line)
-        try:
-            method, path, version = line.strip().split()
-        except ValueError:
-            self.send_error(HTTPStatus.BAD_REQUEST)
-            raise HTTPRequestError()
-        if method not in self.allowed_methods:
+    def request_line_parser(self):
+        raw = self.rfile.readline(self.MAX_LINE + 1)
+        line = str(raw, self.ENCODING).strip()
+        if len(line) > self.MAX_LINE:
+            self.send_error(HTTPStatus.REQUEST_URI_TOO_LONG)
+            return
+        request_tokens = line.split()
+        if len(request_tokens) != 3:
+            self.send_error(HTTPStatus.BAD_REQUEST, f'Bad request syntax {line}')
+            return
+        version, path, method = request_tokens
+        if method not in self.ALLOWED_METHODS:
             self.send_error(HTTPStatus.METHOD_NOT_ALLOWED)
-            raise HTTPRequestError()
+            return
         return Request(version, path, method, {})
 
     def headers_parser(self):
@@ -124,11 +127,11 @@ class HTTPHandler:
                 return
             if line in {'\r\n', '\n', ''}:
                 break
-            header = [i.strip() for i in line.split(':', 1)]
-            if len(header) != 2:
+            header_tokens = [i.strip() for i in line.split(':', 1)]
+            if len(header_tokens) != 2:
                 self.send_error(HTTPStatus.BAD_REQUEST, f'Bad request syntax {line}')
                 return
-            key, value = header
+            key, value = header_tokens
             headers[key].add(value)
             if len(headers) > self.MAX_HEADERS:
                 self.send_error(HTTPStatus.REQUEST_HEADER_FIELDS_TOO_LARGE)
