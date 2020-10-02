@@ -90,3 +90,64 @@ class HTTPServer(TCPServer):
 
     def send_response(self):
         pass
+
+
+class HTTPHandler:
+    allowed_methods = {'GET', 'HEAD'}
+    request_line_max_length = 1024 * 60
+    max_headers = 100
+
+    def __init__(self, client_socket):
+        self.sock = client_socket
+        self.rfile = client_socket.makefile('rb')
+        self.wfile = client_socket.makefile('wb')
+
+    def parse_request(self):
+        request = self.request_parser()
+        headers = self.headers_parser()
+        request.headers.update(headers)
+
+    def request_parser(self):
+        line = self.rfile.readline(self.request_line_max_length + 1)
+        self.__check_line(line)
+        try:
+            method, path, version = line.strip().split()
+        except ValueError:
+            self.send_error(HTTPStatus.BAD_REQUEST)
+            raise HTTPRequestError()
+        if method not in self.allowed_methods:
+            self.send_error(HTTPStatus.METHOD_NOT_ALLOWED)
+            raise HTTPRequestError()
+        return Request(version, path, method, {})
+
+    def headers_parser(self):
+        header_count = 0
+        headers = defaultdict(set)
+        while True:
+            header_count += 1
+            line = self.rfile.readline(self.request_line_max_length + 1)
+            self.__check_line(line)
+            if line in (b'\r\n', b'\n', b''):
+                break
+            try:
+                header, value = line.strip().split(' :', 1)
+            except ValueError:
+                self.send_error(HTTPStatus.BAD_REQUEST)
+                raise HTTPRequestError()
+            headers[header].add(value)
+            if header_count > self.max_headers:
+                self.send_error(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+                raise HTTPRequestError()
+        return headers
+
+    def __check_line(self, line):
+        if len(line) > self.request_line_max_length:
+            self.send_error(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+            raise HTTPRequestError()
+
+    def send_response(self, response):
+        self.wfile.writelines(response)
+
+    def send_error(self, status):
+        response = f'HTTP/1.1 {status.value} {status.phrase}'.encode('iso-8859-1')
+        self.send_response(response)
