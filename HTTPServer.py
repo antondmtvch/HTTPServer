@@ -50,7 +50,7 @@ class TCPServer:
     socket_type = socket.SOCK_STREAM
     backlog = 10
 
-    def __init__(self, host, port, socket_timeout):
+    def __init__(self, host: str, port: int, socket_timeout: int):
         self.host = host
         self.port = port
         self.socket_timeout = socket_timeout
@@ -78,7 +78,7 @@ class TCPServer:
 class HTTPServer(TCPServer):
     server_name = 'HTTPServer/1.0'
 
-    def __init__(self, host, port, socket_timeout):
+    def __init__(self, host: str, port: int, socket_timeout: int):
         super().__init__(host, port, socket_timeout)
         self.handler = HTTPHandler
 
@@ -171,7 +171,7 @@ class HTTPHandler:
         self.wfile.flush()
         self.wfile.close()
 
-    def send_error(self, status, body=None):
+    def send_error(self, status: HTTPStatus, body=None):
         headers = {
             'Date': datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT'),
             'Server': HTTPServer.server_name,
