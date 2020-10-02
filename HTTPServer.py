@@ -122,23 +122,24 @@ class HTTPHandler:
         return Request(version, path, method, {})
 
     def headers_parser(self):
-        header_count = 0
-        headers = defaultdict(set)
+        headers = {}
         while True:
-            header_count += 1
-            line = self.rfile.readline(self.request_line_max_length + 1)
-            self.__check_line(line)
-            if line in (b'\r\n', b'\n', b''):
+            raw = self.rfile.readline(self.MAX_LINE + 1)
+            line = str(raw, self.ENCODING).strip()
+            if len(line) > self.MAX_LINE:
+                self.send_error(HTTPStatus.REQUEST_URI_TOO_LONG)
+                return
+            if line in {'\r\n', '\n', ''}:
                 break
-            try:
-                header, value = line.strip().split(' :', 1)
-            except ValueError:
-                self.send_error(HTTPStatus.BAD_REQUEST)
-                raise HTTPRequestError()
-            headers[header].add(value)
-            if header_count > self.max_headers:
-                self.send_error(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
-                raise HTTPRequestError()
+            header = [i.strip() for i in line.split(':', 1)]
+            if len(header) != 2:
+                self.send_error(HTTPStatus.BAD_REQUEST, f'Bad request syntax {line}')
+                return
+            key, value = header
+            headers[key].add(value)
+            if len(headers) > self.MAX_HEADERS:
+                self.send_error(HTTPStatus.REQUEST_HEADER_FIELDS_TOO_LARGE)
+                return
         return headers
 
     def send_response(self, response: Response):
