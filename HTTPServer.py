@@ -6,11 +6,11 @@ from collections import defaultdict
 
 
 class Request:
-    def __init__(self, http_version, method, path, headers):
+    def __init__(self, http_version: str, method: str, path: str, headers: dict):
         self.http_version = http_version
         self.method = method
         self.path = path
-        self.headers = headers if headers else {}
+        self.headers = headers
 
 
 class Response:
