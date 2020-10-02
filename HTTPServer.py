@@ -59,8 +59,11 @@ class TCPServer:
 
 
 class HTTPServer(TCPServer):
+    server_name = 'HTTPServer/1.0'
+
     def __init__(self, host, port, socket_timeout):
         super().__init__(host, port, socket_timeout)
+        self.handler = HTTPHandler
 
     def serve_forever(self):
         super().activate()
