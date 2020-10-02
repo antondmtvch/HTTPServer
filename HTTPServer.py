@@ -2,7 +2,24 @@ import datetime
 import socket
 
 from enum import IntEnum
-from collections import defaultdict
+
+DOCUMENT_ROOT = ''
+
+
+class HTTPStatus(IntEnum):
+    def __new__(cls, value, phrase):
+        obj = int.__new__(cls)
+        obj._value_ = value
+        obj.phrase = phrase
+        return obj
+
+    OK = 200, 'OK'
+    BAD_REQUEST = 400, 'Bad Request'
+    FORBIDDEN = 403, 'Forbidden'
+    NOT_FOUND = 404, 'Not Found'
+    METHOD_NOT_ALLOWED = 405, 'Method Not Allowed'
+    REQUEST_URI_TOO_LONG = 414, 'Request-URI Too Long'
+    REQUEST_HEADER_FIELDS_TOO_LARGE = 431, 'Request Header Fields Too Large'
 
 
 class Request:
