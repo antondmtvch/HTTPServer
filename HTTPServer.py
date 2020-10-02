@@ -1,6 +1,20 @@
 import socket
 
 from enum import IntEnum
+from collections import defaultdict
+
+
+class Request:
+    def __init__(self, http_version, method, path, headers):
+        self.http_version = http_version
+        self.method = method
+        self.path = path
+        self.headers = headers if headers else {}
+
+
+class Response:
+    def __init__(self):
+        pass
 
 
 class HTTPStatus(IntEnum):
