@@ -18,10 +18,18 @@ class Response:
 
 
 class HTTPStatus(IntEnum):
-    OK = 200
-    FORBIDDEN = 403
-    NOT_FOUND = 404
-    METHOD_NOT_ALLOWED = 405
+    def __new__(cls, value, phrase):
+        obj = int.__new__(cls)
+        obj._value_ = value
+        obj.phrase = phrase
+        return obj
+
+    OK = 200, 'OK'
+    BAD_REQUEST = 400, 'Bad Request'
+    FORBIDDEN = 403, 'Forbidden'
+    NOT_FOUND = 404, 'Not Found'
+    METHOD_NOT_ALLOWED = 405, 'Method Not Allowed'
+    UNSUPPORTED_MEDIA_TYPE = 415, 'Unsupported Media Type'
 
 
 class ServerConnectionError(Exception):
