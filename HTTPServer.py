@@ -1,3 +1,4 @@
+import datetime
 import socket
 
 from enum import IntEnum
@@ -140,14 +141,31 @@ class HTTPHandler:
                 raise HTTPRequestError()
         return headers
 
-    def __check_line(self, line):
-        if len(line) > self.request_line_max_length:
-            self.send_error(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
-            raise HTTPRequestError()
+    def send_response(self, response: Response):
+        status_line = f'HTTP/1.1 {response.status.value} {response.status.phrase}\r\n'
+        self.wfile.write(status_line.encode(self.ENCODING))
 
-    def send_response(self, response):
-        self.wfile.writelines(response)
+        if response.headers:
+            for key, value in response.headers.items():
+                header_line = f'{key}: {value}\r\n'.encode(self.ENCODING)
+                self.wfile.write(header_line)
+        self.wfile(b'\r\n')
 
-    def send_error(self, status):
-        response = f'HTTP/1.1 {status.value} {status.phrase}'.encode('iso-8859-1')
+        if response.body:
+            self.wfile.write(response.body)
+        self.wfile.flush()
+        self.wfile.close()
+
+    def send_error(self, status, body=None):
+        headers = {
+            'Date': datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT'),
+            'Server': HTTPServer.server_name,
+            'Content-Length': '',
+            'Content-Type': 'text/plain',
+            'Connection': 'close',
+        }
+        if body:
+            body = body.encode(self.ENCODING)
+            headers.update({'Content-Length': f'{len(body)}'})
+        response = Response(status=status, headers={}, body=body)
         self.send_response(response)
