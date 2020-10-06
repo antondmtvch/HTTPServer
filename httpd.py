@@ -83,8 +83,9 @@ class TCPServer:
 class HTTPServer(TCPServer):
     server_name = 'HTTPServer/' + __version__
 
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str, port: int, workers: int):
         super().__init__(host, port)
+        self.workers = workers
         self.handler = MainHTTPHandler
 
     def serve_forever(self):
