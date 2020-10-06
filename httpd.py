@@ -87,14 +87,25 @@ class HTTPServer(TCPServer):
         self.workers = workers
         self.handler = MainHTTPHandler
 
-    def serve_forever(self):
-        super().activate()
-        logger.info(f'HTTP server run on {self.host}:{self.port}')
+    def handle_requests(self):
         while True:
             client_socket, client_addr = self.accept_client_connection()
-            logger.info('Accept client: {0}:{1}'.format(*client_addr))
-            thread = threading.Thread(target=self.handler, args=(client_socket, ))
+            logging.debug(f'{threading.current_thread().name}: {client_addr}')
+            self.handler(client_socket)
+
+    def serve_forever(self):
+        super().activate()
+        for i in range(self.workers):
+            thread = threading.Thread(target=self.handle_requests)
+            thread.daemon = True
             thread.start()
+        logging.info(f'HTTP server run on {self.host}:{self.port}')
+        try:
+            while True:
+                pass
+        except KeyboardInterrupt:
+            self.close_serv_connection()
+            logging.info('Server is stopping.')
 
 
 class BaseHTTPHandler:
