@@ -1,19 +1,17 @@
-import os
+import argparse
 import datetime
-import socket
-import threading
 import logging
-
-from urllib.parse import urlparse, unquote
+import os
+import socket
+import sys
+import threading
 from collections import namedtuple
-from enum import IntEnum
+from http import HTTPStatus
+from urllib.parse import urlparse, unquote
 
 __version__ = '1.0'
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-DOCUMENT_ROOT = os.path.abspath(os.path.curdir)
+DOCUMENT_ROOT = ''
 CONTENT_TYPES = {
     'html': 'text/html',
     'css': 'text/css',
@@ -24,24 +22,6 @@ CONTENT_TYPES = {
     'gif': 'image/gif',
     'swf': 'application/x-shockwave-flash',
 }
-
-
-class HTTPStatus(IntEnum):
-    def __new__(cls, value, phrase):
-        obj = int.__new__(cls)
-        obj._value_ = value
-        obj.phrase = phrase
-        return obj
-
-    OK = 200, 'OK'
-    BAD_REQUEST = 400, 'Bad Request'
-    FORBIDDEN = 403, 'Forbidden'
-    NOT_FOUND = 404, 'Not Found'
-    METHOD_NOT_ALLOWED = 405, 'Method Not Allowed'
-    REQUEST_URI_TOO_LONG = 414, 'Request-URI Too Long'
-    REQUEST_HEADER_FIELDS_TOO_LARGE = 431, 'Request Header Fields Too Large'
-    NOT_IMPLEMENTED = 501, 'Not Implemented'
-
 
 Request = namedtuple('Request', ('method', 'path', 'proto', 'headers'))
 Response = namedtuple('Response', ('status', 'body', 'headers'))
@@ -124,7 +104,7 @@ class BaseHTTPHandler:
     def process_request(self):
         request = self.parse_requestline()
         headers = self.parse_headers()
-        if bool(request and headers):
+        if request:
             request.headers.extend(headers)
             handler = 'process_' + request.method
             if not hasattr(self, handler):
@@ -151,7 +131,7 @@ class BaseHTTPHandler:
         if not proto.startswith('HTTP'):
             self.send_error(HTTPStatus.BAD_REQUEST)
             return
-        if not path.startswith('/'):
+        if not path.startswith('/') or r'../' in path:
             self.send_error(HTTPStatus.BAD_REQUEST)
             return
         return Request(method=method, path=path, proto=proto, headers=[])
@@ -230,9 +210,6 @@ class MainHTTPHandler(BaseHTTPHandler):
 
     def open_document(self, path):
         u = urlparse(unquote(path))
-        if '../' in u.path:
-            self.send_error(HTTPStatus.BAD_REQUEST)
-            return
         if u.path == '/':
             path = os.path.join(DOCUMENT_ROOT, 'index.html')
         elif u.path.endswith('/'):
