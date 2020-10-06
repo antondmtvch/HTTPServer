@@ -61,13 +61,12 @@ class TCPServer:
         self.port = port
         self.socket = None
 
-    def close_connection(self):
+    def close_serv_connection(self):
         self.socket.close()
-        self.socket = None
 
     def activate(self):
         if self.socket:
-            self.close_connection()
+            self.close_serv_connection()
         try:
             self.socket = socket.socket(self.socket_family, self.socket_type)
             self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
