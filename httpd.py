@@ -245,6 +245,27 @@ class MainHTTPHandler(BaseHTTPHandler):
         return file
 
 
-if __name__ == '__main__':
-    server = HTTPServer('127.0.0.1', 8080)
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-r', '--documentroot', type=str, required=True)
+    parser.add_argument('-p', '--port', type=int, default=8080)
+    parser.add_argument('-w', '--workers', type=int, default=15)
+    parser.add_argument('--host', type=str, default='localhost')
+    return parser.parse_args()
+
+
+def main():
+    args = parse_arguments()
+    logging.basicConfig(level=logging.INFO,
+                        format='[%(asctime)s] %(levelname).1s %(message)s', datefmt='%Y.%m.%d %H:%M:%S')
+    if not os.path.exists(args.documentroot):
+        logging.error(f'Path not exists {args.documentroot}')
+        sys.exit(1)
+    global DOCUMENT_ROOT
+    DOCUMENT_ROOT = args.documentroot
+    server = HTTPServer(args.host, args.port, args.workers)
     server.serve_forever()
+
+
+if __name__ == '__main__':
+    main()
