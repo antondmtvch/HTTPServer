@@ -213,10 +213,12 @@ class MainHTTPHandler(BaseHTTPHandler):
         if u.path == '/':
             path = os.path.join(DOCUMENT_ROOT, 'index.html')
         elif u.path.endswith('/'):
-            paths = u.path.split('/')
+            path = os.path.normpath(u.path)
+            paths = path.split(os.path.sep)
             path = os.path.join(DOCUMENT_ROOT, *paths, 'index.html')
         else:
-            paths = u.path.split('/')
+            path = os.path.normpath(u.path)
+            paths = path.split(os.path.sep)
             path = os.path.join(DOCUMENT_ROOT, *paths)
         if not os.path.exists(path):
             self.send_error(HTTPStatus.NOT_FOUND)
