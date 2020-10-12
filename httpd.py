@@ -131,7 +131,7 @@ class BaseHTTPHandler:
         if not proto.startswith('HTTP'):
             self.send_error(HTTPStatus.BAD_REQUEST)
             return
-        if not path.startswith('/') or r'../' in path:
+        if not path.startswith('/'):
             self.send_error(HTTPStatus.BAD_REQUEST)
             return
         return Request(method=method, path=path, proto=proto, headers=[])
